@@ -1,0 +1,1988 @@
+<!doctype html>
+<html lang="ar" dir="rtl" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>التقارير الشهرية — THC</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <!-- PDF Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+      /* ═══════════════════════════════════════
+   THEME VARIABLES
+═══════════════════════════════════════ */
+      :root {
+        --sidebar-bg: #f8f7f3;
+        --sidebar-w: 228px;
+        --topbar-bg: #ffffff;
+        --bg: #f5f3ef;
+        --card: #ffffff;
+        --surface: #faf8f5;
+        --line: #ede8e0;
+        --line2: #ddd6cc;
+        --ink: #0f0e0c;
+        --ink2: #4a4641;
+        --ink3: #8b8680;
+        --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+        --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+        --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.12);
+        --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.15);
+        --green: #1b6e3f;
+        --green-dk: #134d2c;
+        --green-bg: #e6f5ee;
+        --amber: #d97706;
+        --amber-bg: #fffbf0;
+        --red: #dc2626;
+        --red-bg: #fef2f2;
+        --blue: #0066cc;
+        --blue-bg: #eff6ff;
+        --gray-bg: #f3f0eb;
+      }
+      [data-theme="dark"] {
+        --sidebar-bg: #1a1815;
+        --topbar-bg: #1f1c18;
+        --bg: #15120f;
+        --card: #1f1c18;
+        --surface: #2a2520;
+        --line: #3a342a;
+        --line2: #4a4238;
+        --ink: #f5f0e8;
+        --ink2: #b8afa0;
+        --ink3: #7a7168;
+        --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+        --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+        --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.4);
+        --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
+        --green: #4caf50;
+        --green-dk: #388e3c;
+        --green-bg: #1b4620;
+        --amber: #f59e0b;
+        --amber-bg: #2a2010;
+        --red: #f87171;
+        --red-bg: #2a1410;
+        --blue: #60a5fa;
+        --blue-bg: #0d1e30;
+        --gray-bg: #2a2520;
+      }
+    </style>
+  </head>
+  <body></body>
+</html>
+<style>
+  /* ═══════════════════════════════════════ BASE ═══════════════════════════════════════ */
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  html,
+  body {
+    height: 100%;
+  }
+  body {
+    font-family: "Cairo", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 13px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background 0.3s ease, color 0.3s ease;
+  }
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--line2);
+    border-radius: 99px;
+  }
+
+  /* ═══════════════════════════════════════ LAYOUT ═══════════════════════════════════════ */
+  .app {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+  .sidebar {
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    background: var(--sidebar-bg);
+    border-inline-start: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+    transition: background 0.25s;
+    order: 1;
+  }
+  .main {
+    order: 2;
+    flex: 1;
+    min-width: 0;
+  }
+  .main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .body-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px 48px;
+  }
+
+  /* ═══════════════════════════════════════ SIDEBAR ═══════════════════════════════════════ */
+  .s-logo {
+    padding: 16px 18px 14px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .thc-logo {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 20px;
+    font-weight: 900;
+    color: #c0392b;
+    letter-spacing: -0.5px;
+    line-height: 1;
+  }
+  .thc-logo-sub {
+    font-size: 9px;
+    color: var(--ink3);
+    font-weight: 500;
+    margin-top: 1px;
+    letter-spacing: 0.3px;
+  }
+  .s-section {
+    padding: 14px 16px 5px;
+    font-size: 9.5px;
+    font-weight: 700;
+    color: var(--ink3);
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+  }
+  .s-item {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: 9px;
+    padding: 8px 14px;
+    margin: 1px 7px;
+    border-radius: 8px;
+    color: var(--ink2);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    border: none;
+    background: none;
+    width: calc(100% - 14px);
+    font-family: inherit;
+    justify-content: space-between;
+  }
+  .s-item svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    opacity: 0.65;
+    transition: opacity 0.18s;
+    stroke: currentColor;
+  }
+  .s-item:hover {
+    background: rgba(45, 125, 79, 0.1);
+    color: var(--green);
+  }
+  .s-item:hover svg {
+    opacity: 1;
+  }
+  .s-item.active {
+    background: var(--green-bg);
+    color: var(--green);
+    font-weight: 700;
+  }
+  .s-item.active svg {
+    opacity: 1;
+  }
+  .s-sub {
+    margin-right: 10px;
+    padding-right: 8px;
+    border-right: 2px solid var(--line);
+  }
+  .s-sub .s-item {
+    font-size: 12.5px;
+    padding: 7px 10px;
+  }
+  .s-sub .s-item.active {
+    background: none;
+    border-right: 2px solid var(--green);
+    border-radius: 0;
+    margin-right: -10px;
+    padding-right: 8px;
+  }
+  .s-badge {
+    margin-right: auto;
+    background: var(--red);
+    color: #fff;
+    font-size: 9.5px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 99px;
+    line-height: 1.4;
+  }
+  .s-foot {
+    margin-top: auto;
+    padding: 12px 16px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .s-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .s-role {
+    font-size: 10px;
+    color: var(--ink3);
+  }
+</style>
+<style>
+  /* ═══════════════════════════════════════ AVATAR ═══════════════════════════════════════ */
+  .avatar-comp {
+    position: relative;
+    flex-shrink: 0;
+  }
+  .avatar-circle {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .avatar-circle svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+  .avatar-online::after {
+    content: "";
+    position: absolute;
+    bottom: 1px;
+    left: 1px;
+    width: 9px;
+    height: 9px;
+    background: #22c55e;
+    border-radius: 50%;
+    border: 2px solid var(--topbar-bg);
+  }
+  .s-avatar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* ═══════════════════════════════════════ TOPBAR ═══════════════════════════════════════ */
+  .topbar {
+    background: var(--topbar-bg);
+    border-bottom: 1px solid var(--line);
+    padding: 10px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-xs);
+    transition: background 0.25s;
+  }
+  .tb-left {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .tb-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .tb-role {
+    font-size: 11px;
+    color: var(--ink3);
+  }
+  .tb-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tb-crumbs {
+    font-size: 12px;
+    color: var(--ink3);
+  }
+  .tb-crumbs b {
+    color: var(--ink);
+  }
+  .icon-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--ink2);
+    transition: all 0.18s;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .icon-btn svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+  }
+  .icon-btn:hover {
+    border-color: var(--green);
+    color: var(--green);
+  }
+  .icon-btn .notif-dot {
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    width: 15px;
+    height: 15px;
+    background: var(--red);
+    border-radius: 50%;
+    color: #fff;
+    font-size: 8px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--topbar-bg);
+  }
+
+  /* ═══════════════════════════════════════ PAGE HEADER ═══════════════════════════════════════ */
+  .page-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .page-title {
+    font-size: 32px;
+    font-weight: 900;
+    color: var(--ink);
+    letter-spacing: -0.6px;
+    line-height: 1.1;
+  }
+  .page-sub {
+    font-size: 12.5px;
+    color: var(--ink3);
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .page-sub svg {
+    stroke: currentColor;
+    fill: none;
+    flex-shrink: 0;
+  }
+  .ph-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 18px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: all 0.25s ease;
+    font-family: inherit;
+    text-decoration: none;
+  }
+  .btn svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2.5;
+    flex-shrink: 0;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--green) 0%, var(--green-dk) 100%);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(27, 110, 63, 0.25);
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(27, 110, 63, 0.3);
+  }
+  .btn-outline {
+    background: var(--card);
+    color: var(--ink2);
+    border: 1.5px solid var(--line);
+  }
+  .btn-outline:hover {
+    border-color: var(--green);
+    color: var(--green);
+    background: var(--green-bg);
+  }
+</style>
+<style>
+  /* ═══════════════════════════════════════ STAT ROW ═══════════════════════════════════════ */
+  .stat-row {
+    display: grid;
+    grid-template-columns: 150px repeat(3, 1fr) 1.5fr;
+    gap: 16px;
+    margin-bottom: 22px;
+  }
+  .sc {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 18px;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
+  }
+  .sc:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    border-color: var(--line2);
+  }
+  .sc-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+  }
+  .sc-icon svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+  }
+  .sc-lbl {
+    font-size: 11.5px;
+    color: var(--ink3);
+    font-weight: 600;
+    margin-bottom: 6px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+  .sc-val {
+    font-size: 40px;
+    font-weight: 900;
+    color: var(--ink);
+    line-height: 1;
+    letter-spacing: -1.5px;
+  }
+  .sc-sub {
+    font-size: 11.5px;
+    color: var(--ink3);
+    margin-top: 4px;
+  }
+  .sc-date .sc-lbl {
+    font-size: 11px;
+  }
+  .sc-date .date-icon {
+    margin-bottom: 5px;
+    color: var(--ink3);
+  }
+  .sc-date .date-icon svg {
+    width: 26px;
+    height: 26px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.5;
+  }
+  .sc-date .date-big {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--ink);
+    margin-top: 2px;
+  }
+  .sc-date .date-time {
+    font-size: 11px;
+    color: var(--ink3);
+    margin-top: 2px;
+  }
+  .sc-kpi {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .sc-kpi-left .sc-lbl {
+    font-size: 11.5px;
+    margin-bottom: 4px;
+  }
+  .sc-kpi-val {
+    font-size: 42px;
+    font-weight: 900;
+    color: var(--green);
+    letter-spacing: -1.5px;
+    line-height: 1;
+  }
+  .sc-kpi-bar {
+    height: 5px;
+    background: var(--line);
+    border-radius: 99px;
+    overflow: hidden;
+    width: 110px;
+    margin-top: 8px;
+  }
+  .sc-kpi-fill {
+    height: 100%;
+    background: var(--green);
+    border-radius: 99px;
+  }
+  .sc-kpi-arrow {
+    color: var(--green);
+    font-weight: 900;
+    opacity: 0.8;
+    flex-shrink: 0;
+  }
+  .sc-kpi-arrow svg {
+    width: 28px;
+    height: 28px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2.5;
+  }
+
+  /* ═══════════════════════════════════════ MIDDLE PANELS ═══════════════════════════════════════ */
+  .mid-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 22px;
+  }
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
+  }
+  .panel:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--line2);
+  }
+  .ph {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .ph-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .ph-link {
+    font-size: 11.5px;
+    color: var(--green);
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .donut-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .donut-legend {
+    flex: 1;
+    display: grid;
+    gap: 7px;
+  }
+  .dl {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+  }
+  .dl-sq {
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .dl-lbl {
+    flex: 1;
+    color: var(--ink2);
+  }
+  .dl-n {
+    font-weight: 700;
+    color: var(--ink);
+    min-width: 18px;
+  }
+  .dl-p {
+    font-size: 11px;
+    color: var(--ink3);
+    min-width: 38px;
+  }
+  .list-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .list-item:last-child {
+    border: none;
+    padding-bottom: 0;
+  }
+  .li-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .li-name {
+    flex: 1;
+    font-size: 12.5px;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .li-pct {
+    font-size: 13px;
+    font-weight: 700;
+    min-width: 50px;
+    text-align: left;
+  }
+  .li-tag {
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 99px;
+    flex-shrink: 0;
+  }
+  .li-check {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--green-bg);
+    color: var(--green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .li-check svg {
+    width: 11px;
+    height: 11px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 3;
+  }
+</style>
+<style>
+  /* ═══════════════════════════════════════ TABLE SECTION ═══════════════════════════════════════ */
+  .table-section {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+  .t-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+    flex-wrap: wrap;
+  }
+  .t-toolbar-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    flex-shrink: 0;
+  }
+  .t-search {
+    position: relative;
+    flex: 1;
+    min-width: 180px;
+    max-width: 260px;
+  }
+  .t-search input {
+    width: 100%;
+    padding: 8px 12px 8px 36px;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    font-size: 13px;
+    font-family: inherit;
+    background: var(--card);
+    color: var(--ink);
+    outline: none;
+    transition: all 0.2s ease;
+  }
+  .t-search input:focus {
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px var(--green-bg);
+  }
+  .t-si {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--ink3);
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+  }
+  .t-si svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+  }
+  .t-sel {
+    padding: 8px 12px;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    font-size: 13px;
+    font-family: inherit;
+    background: var(--card);
+    color: var(--ink);
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .t-sel:hover {
+    border-color: var(--line2);
+  }
+  .t-sel:focus {
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px var(--green-bg);
+  }
+  .t-export {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 13px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-family: inherit;
+    background: var(--card);
+    color: var(--ink2);
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.18s;
+  }
+  .t-export svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+  }
+  .t-export:hover {
+    border-color: var(--green);
+    color: var(--green);
+    background: var(--green-bg);
+    transform: translateY(-1px);
+  }
+  .ml-auto {
+    margin-right: auto;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  thead th {
+    text-align: right;
+    padding: 12px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ink2);
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    background: var(--surface);
+    border-bottom: 2px solid var(--line2);
+    white-space: nowrap;
+  }
+  tbody tr {
+    border-bottom: 1px solid var(--line);
+    transition: all 0.18s ease;
+    cursor: pointer;
+  }
+  tbody tr:hover {
+    background: linear-gradient(90deg, rgba(27, 110, 63, 0.03) 0%, transparent 100%);
+  }
+  tbody tr:hover td {
+    background: rgba(27, 110, 63, 0.02);
+  }
+  td {
+    padding: 13px 14px;
+    vertical-align: middle;
+    background: var(--card);
+    transition: background 0.15s;
+  }
+  .td-n {
+    font-size: 12px;
+    color: var(--ink3);
+    font-weight: 700;
+    text-align: center;
+  }
+  .td-name {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink);
+    max-width: 280px;
+    line-height: 1.4;
+  }
+  .td-sub {
+    font-size: 11px;
+    color: var(--ink3);
+    margin-top: 2px;
+  }
+  .td-num {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .td-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 120px;
+  }
+  .td-track {
+    flex: 1;
+    height: 7px;
+    background: var(--line);
+    border-radius: 99px;
+    overflow: hidden;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.06);
+  }
+  .td-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 8px rgba(27, 110, 63, 0.2);
+  }
+  .td-pct {
+    font-size: 13px;
+    font-weight: 800;
+    min-width: 50px;
+    text-align: right;
+  }
+  .td-dir svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2.5;
+  }
+  .delta-pos {
+    color: var(--green);
+    font-weight: 700;
+  }
+  .delta-neg {
+    color: var(--red);
+    font-weight: 700;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 13px;
+    border-radius: 99px;
+    white-space: nowrap;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .bg-green {
+    background: var(--green-bg);
+    color: var(--green);
+  }
+  .bg-amber {
+    background: var(--amber-bg);
+    color: var(--amber);
+  }
+  .bg-red {
+    background: var(--red-bg);
+    color: var(--red);
+  }
+  .badge svg {
+    width: 10px;
+    height: 10px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 3;
+  }
+  .bg-green {
+    background: var(--green-bg);
+    color: var(--green);
+  }
+  .bg-amber {
+    background: var(--amber-bg);
+    color: var(--amber);
+  }
+  .bg-red {
+    background: var(--red-bg);
+    color: var(--red);
+  }
+  .bg-gray {
+    background: var(--gray-bg);
+    color: var(--ink3);
+  }
+  .btn-detail {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--green);
+    background: var(--green-bg);
+    border: none;
+    padding: 5px 11px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn-detail:hover {
+    background: #c0dece;
+  }
+  .show-more {
+    text-align: center;
+    padding: 11px;
+    border-top: 1px solid var(--line);
+  }
+  .show-more button {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--green);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .show-more button svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2.5;
+  }
+
+  /* HELP FLOAT */
+  .help-float {
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+    background: linear-gradient(135deg, var(--green) 0%, var(--green-dk) 100%);
+    color: #fff;
+    border-radius: 14px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 8px 24px rgba(27, 110, 63, 0.35);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    z-index: 100;
+  }
+  .help-float:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(27, 110, 63, 0.4);
+  }
+  .help-ic {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .help-ic svg {
+    width: 15px;
+    height: 15px;
+    stroke: #fff;
+    fill: none;
+    stroke-width: 2;
+  }
+
+  /* PDF LOADING OVERLAY */
+  .pdf-loading {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.6);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 9999; color: #fff; gap: 18px;
+  }
+  .pdf-spinner {
+    width: 52px; height: 52px;
+    border: 4px solid rgba(255,255,255,.25);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .75s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .pdf-loading-text { font-size: 16px; font-weight: 700; letter-spacing: .3px; }
+
+  /* PRINT */
+  @media print {
+    *, *::before, *::after {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    body { background: #fff !important; font-size: 11px !important; }
+    .sidebar, .topbar, .help-float, .ph-actions,
+    .t-export, .btn-detail, #btn-theme, #btn-settings, #btn-notif { display: none !important; }
+    .app { display: block !important; }
+    .main { overflow: visible !important; display: block !important; }
+    .body-scroll { overflow: visible !important; padding: 10px 16px !important; }
+    .stat-row { gap: 8px !important; }
+    .mid-grid { gap: 8px !important; }
+    .sc, .panel, .table-section { box-shadow: none !important; border: 1px solid #e0e0e0 !important; }
+    .table-section { page-break-inside: auto; }
+    tbody tr { page-break-inside: avoid; }
+    @page { size: A4; margin: 15mm 10mm; }
+  }
+</style>
+<!-- ═══════════════ APP ═══════════════ -->
+<div class="app">
+  <!-- ══════════════ SIDEBAR ══════════════ -->
+  <aside class="sidebar">
+    <div class="s-logo">
+      <div>
+        <div class="thc-logo">
+          <svg width="26" height="18" viewBox="0 0 26 18" fill="none">
+            <rect x="0" y="0" width="7" height="18" rx="1" fill="#c0392b" />
+            <path d="M9 0h7l10 9-10 9H9V0z" fill="#c0392b" />
+          </svg>
+          THC
+        </div>
+        <div class="thc-logo-sub">Holding Group</div>
+      </div>
+    </div>
+
+    <div class="s-section">القوائم الرئيسية</div>
+    <button class="s-item">
+      لوحة التحكم
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    </button>
+    <button class="s-item">
+      المؤشرات الرئيسية
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+    </button>
+    <button class="s-item">
+      المهام والمشاريع
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+    </button>
+    <button class="s-item">
+      الدعم الفني
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>
+    </button>
+    <button class="s-item">
+      المستخدمين
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+    </button>
+
+    <div class="s-section">التقارير</div>
+    <button class="s-item parent">
+      التقارير
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    </button>
+    <div class="s-sub">
+      <button class="s-item active">التقارير الشهرية</button>
+      <button class="s-item">التقارير المخصصة</button>
+    </div>
+    <button class="s-item">
+      الإعدادات
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    </button>
+
+    <!-- SIDEBAR FOOTER AVATAR -->
+    <div class="s-foot">
+      <div class="s-avatar-wrap">
+        <div class="avatar-comp avatar-online">
+          <div
+            class="avatar-circle"
+            style="background: linear-gradient(135deg, #2d7d4f, #4caf76)"
+          >
+            <svg viewBox="0 0 24 24" fill="white">
+              <path
+                d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"
+              />
+            </svg>
+          </div>
+        </div>
+        <div>
+          <div class="s-name">هشام حمدي</div>
+          <div class="s-role">مدير تقنية المعلومات</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+<!-- ══════════════ MAIN ══════════════ -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="tb-left">
+      <div class="avatar-comp avatar-online">
+        <div class="avatar-circle" style="background:linear-gradient(135deg,#2d7d4f,#4caf76)">
+          <svg viewBox="0 0 24 24" fill="white" width="18" height="18"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+        </div>
+      </div>
+      <div>
+        <div class="tb-name">هشام حمدي</div>
+        <div class="tb-role">مدير تقنية المعلومات</div>
+      </div>
+    </div>
+    <div class="tb-right">
+      <!-- Bell -->
+      <div class="icon-btn" id="btn-notif" title="الإشعارات">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <span class="notif-dot">2</span>
+      </div>
+      <!-- Settings -->
+      <div class="icon-btn" id="btn-settings" title="الإعدادات">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      </div>
+      <!-- Theme Toggle -->
+      <div class="icon-btn" id="btn-theme" title="تبديل الوضع المظلم">
+        <!-- moon icon (light mode default) -->
+        <svg id="icon-moon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg>
+        <!-- sun icon (dark mode) -->
+        <svg id="icon-sun" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </div>
+    </div>
+    <div class="tb-crumbs">← &nbsp;التقارير / <b>التقارير الشهرية</b></div>
+  </div>
+
+  <!-- SCROLLABLE BODY -->
+  <div class="body-scroll" id="pageBody"></div>
+</div><!-- .main -->
+</div><!-- .app -->
+<script>
+/* ══════════════════════════════════════════════════
+   DATA — من ملف PDF تقنية المعلومات يونيو 2026
+══════════════════════════════════════════════════ */
+const KPIs = [
+  { id:"1",   name:"تفعيل كامل إدارات مكين وتشييد في أودو",         company:"مكين وتشييد",   target:100, actual:74.0,  pct:74.00,  dir:"تصاعدي",
+    reason:"موديولات ما زالت تحت التطوير (تطوير الأعمال، إدارة الحوكمة) وأخرى جاهزة غير مفعّلة، مثل الموارد البشرية المؤجّل أسبوعين باعتماد الرئيس التنفيذي.",
+    action:"استكمال تطوير الموديولات وتفعيل غير المستخدم منها، مع توجيه ملزم لمديري الإدارات وتطبيق خصم مباشر على كل مدير غير ملتزم بالاستخدام." },
+  { id:"2.1", name:"تنفيذ شركة ليورا في أودو",                      company:"ليورا",          target:100, actual:90.0,  pct:90.00,  dir:"تصاعدي",
+    reason:"تم الاتفاق على تفعيل الموديول المالي لشركة ليورا والتعاقد مع شركة تشغيل فندقي خارجي، وجارٍ الربط مع النظام المالي.",
+    action:"التنسيق مع المدير المالي وإدارة الفندق بشركة ليورا لاستكمال متطلبات التعاقد مع شركة التشغيل الخارجي." },
+  { id:"2.2", name:"تفعيل شركة ليورا في أودو",                      company:"ليورا",          target:100, actual:85.0,  pct:85.00,  dir:"تصاعدي",
+    reason:"تم تفعيل طلبات الصرف في ليورا، وجارٍ العمل على رفع دليل الحسابات والبيانات المالية للشركة.",
+    action:"جارٍ رفع وتفعيل شجرة الحسابات على نظام Odoo، ثم رفع دليل الحسابات والبيانات المالية بعد إقفال شهر يونيو." },
+  { id:"3.1", name:"تنفيذ شركة أساس التماسك في أودو",               company:"أساس التماسك",  target:100, actual:90.0,  pct:90.00,  dir:"تصاعدي",
+    reason:"تم الانتهاء من تطوير موديول أساس التماسك (طلبات الصرف، العهد، المشتريات، التسويات) وجارٍ استكمال باقي الموديولات.",
+    action:"استكمال تطوير الموديولات وتفعيلها وإعدادها للتشغيل، مع الاعتماد بأقصى حد 15/07/2026." },
+  { id:"3.2", name:"تفعيل شركة أساس التماسك في أودو",               company:"أساس التماسك",  target:100, actual:80.0,  pct:80.00,  dir:"تصاعدي",
+    reason:"تم تفعيل طلبات الصرف والعهد والمشتريات والتسويات في أساس التماسك، وجارٍ العمل على رفع دليل الحسابات والبيانات المالية.",
+    action:"جارٍ رفع وتفعيل شجرة الحسابات على Odoo، ثم رفع دليل الحسابات والبيانات المالية بعد إقفال شهر يونيو." },
+  { id:"4.1", name:"تنفيذ شركة وثيق في أودو",                       company:"وثيق",          target:100, actual:91.0,  pct:91.00,  dir:"تصاعدي",
+    reason:"تحسينات وتعديلات على النظام لاستكمال الربط الكامل.",
+    action:"إتمام التحسينات والتعديلات الخاصة بنظام CRM مع التنسيق مع شركة دياروان." },
+  { id:"4.2", name:"تفعيل شركة وثيق في أودو",                       company:"وثيق",          target:100, actual:81.0,  pct:81.00,  dir:"تصاعدي",
+    reason:"عدم انتهاء التطويرات من شركة CRM، الموديولات في السعي وموديول العملات والعقود لم تكتمل بعد.",
+    action:"جارٍ إسناد جميع الطلبات الجديدة لشركة دياروان (CRM) مع التنسيق لاستكمال المتطلبات المطورة." },
+  { id:"6",   name:"تفعيل CRM لجميع إدارات وثيق",                   company:"وثيق",          target:100, actual:60.43, pct:60.43,  dir:"تصاعدي",
+    reason:"تعثر المبيعات الهاتفية (لم يتم الربط مع هاتف)، والبيع على الخارطة يحتاج إعادة تقييم، وطلبات تطوير جديدة معلّقة.",
+    action:"جارٍ إسناد جميع الطلبات الجديدة لشركة دياروان، مع متابعة الرد من شركة الاتصال الهاتفي." },
+  { id:"6.1", name:"تسليم وتنفيذ متطلبات المبيعات الميدانية",        company:"وثيق",          target:100, actual:50.0,  pct:50.00,  dir:"تصاعدي",
+    reason:"وجود طلبات جديدة من عيسى السبر، إضافة مؤشر العرض والطلب على جميع المشاريع المدرجة في النظام.",
+    action:"جارٍ إسناد الطلبات الجديدة لشركة دياروان CRM." },
+  { id:"6.2", name:"تسليم وتنفيذ متطلبات المبيعات الهاتفية",        company:"وثيق",          target:100, actual:33.0,  pct:33.00,  dir:"تصاعدي",
+    reason:"لم يتم الربط مع هاتف، تم مخاطبة شركة الهاتف وننتظر الرد.",
+    action:"متابعة الرد من شركة الاتصال الهاتفي لاستكمال الربط." },
+  { id:"6.3", name:"تسليم وتنفيذ متطلبات المبيعات على الخارطة",     company:"وثيق",          target:100, actual:50.0,  pct:50.00,  dir:"تصاعدي",
+    reason:"تحتاج إعادة تقييم لمتطلبات البيع على الخارطة (السيد الجزار).",
+    action:"جارٍ إسناد الطلبات الجديدة لشركة دياروان CRM." },
+  { id:"6.4", name:"تسليم وتنفيذ متطلبات عمليات المبيعات",          company:"وثيق",          target:100, actual:80.0,  pct:80.00,  dir:"تصاعدي",
+    reason:"متابعة العقود مع حمد والعنود.",
+    action:"جارٍ إسناد الطلبات الجديدة لشركة دياروان CRM." },
+  { id:"6.5", name:"تسليم وتنفيذ متطلبات التسويق",                  company:"وثيق",          target:100, actual:60.0,  pct:60.00,  dir:"تصاعدي",
+    reason:"وجود تطويرات جديدة (ملي) وملي.",
+    action:"جارٍ إسناد الطلبات الجديدة لشركة دياروان CRM." },
+  { id:"6.6", name:"تسليم وتنفيذ متطلبات التأجير",                  company:"وثيق",          target:100, actual:50.0,  pct:50.00,  dir:"تصاعدي",
+    reason:"متطلب جديد يستلزم إعداد نماذج بجميع التقارير التي يحتاجها قسم التأجير (عبدالله الجمعة).",
+    action:"جارٍ إسناد الطلبات الجديدة لشركة دياروان CRM." },
+  { id:"6.7", name:"تسليم وتنفيذ متطلبات خدمة العملاء",             company:"وثيق",          target:100, actual:100.0, pct:100.00, dir:"تصاعدي",
+    reason:"لا يوجد متطلبات لهذه الخدمة.",
+    action:"متابعة دورية." },
+  { id:"7",   name:"متابعة طلبات برامج الذكاء الاصطناعي",           company:"عام",           target:100, actual:100.0, pct:100.00, dir:"تصاعدي",
+    reason:"تم تفعيل الطلبات من خلال نظام أودو.",
+    action:"متابعة دورية." },
+  { id:"8",   name:"تفعيل مركز البيانات في أودو",                   company:"عام",           target:100, actual:85.0,  pct:85.00,  dir:"تصاعدي",
+    reason:"نقص في اكتمال البيانات لمركز المعلومات الموحد وعدم معرفة الإدارات باستخدام الموديول وإدخال البيانات.",
+    action:"يتم التنسيق والمتابعة مع محمد مطيقع لاستكمال بيانات مركز المعلومات، ثم إعداد ورشة عمل مع جميع الإدارات المعنية." },
+  { id:"20",  name:"تجهيز المقر الرئيسي تقنياً",                   company:"عام",           target:25,  actual:24.0,  pct:96.00,  dir:"تصاعدي",
+    reason:"تأخر في العمل في مشاريع المقر من ناحية التعديلات التي تم عملها والمرتبطة باكتمال البنية التحتية لتقنية المعلومات.",
+    action:"عمل متابعة أسبوعية مع إدارة المشاريع للاطلاع على آخر مستجدات أعمال المقر." },
+  { id:"12",  name:"نسبة رضا المستخدمين عن الدعم الفني",            company:"الدعم الفني",   target:80,  actual:75.0,  pct:93.75,  dir:"تصاعدي",
+    reason:"تم إعداد نموذج استبيان وإرساله إلى 19 موظفاً لقياس مستوى الاستخدام وتحديد التحديات.",
+    action:"سيتم نشر الاستبيان عبر مجموعات الشركة خلال يوليو على أن يُنفَّذ شهرياً." },
+  { id:"13",  name:"عدد حالات الأعطال في الإنترنت",                 company:"الدعم الفني",   target:0,   actual:1,     pct:0,      dir:"تنازلي",
+    reason:"انقطاع خدمة الإنترنت عن المقر لمدة ساعتين نتيجة عطل في الكابينة الخارجية التابعة لشركة STC.",
+    action:"تفعيل خط الإنترنت الاحتياطي فورًا وتقديم شكوى رسمية لشركة STC." },
+];
+
+const ACHIEVEMENTS = [
+  "النسخ الاحتياطي في هاردسك خارجي — 100%",
+  "متابعة اشتراكات البرامج — 100%",
+  "مضاد الفيروسات والتحديثات — 100%",
+  "أتمتة رفع ومعالجة تذاكر الدعم الفني — 100%",
+  "متابعة طلبات برامج الذكاء الاصطناعي — 100%",
+];
+
+const RISKS = [
+  { name:"تفعيل CRM لجميع إدارات وثيق",           pct:"60.43%", color:"var(--red)"   },
+  { name:"تسليم متطلبات المبيعات الهاتفية",        pct:"33.00%", color:"var(--red)"   },
+  { name:"تنفيذ متطلبات المبيعات على الخارطة",     pct:"50.00%", color:"var(--amber)" },
+  { name:"تسليم متطلبات المبيعات الميدانية",       pct:"50.00%", color:"var(--amber)" },
+  { name:"عدد حالات الأعطال في الإنترنت",          pct:"0%",     color:"var(--red)"   },
+];
+</script>
+<script>
+/* ══════════════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════════════ */
+function statusOf(k) {
+  if (k.pct >= 100) return { lbl:"مكتملة", cls:"bg-green", ic:'<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>' };
+  if (k.pct >= 80)  return { lbl:"متابعة", cls:"bg-amber", ic:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' };
+  return               { lbl:"متأخرة", cls:"bg-red",   ic:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' };
+}
+function pColor(p) {
+  if (p >= 90) return "var(--green)";
+  if (p >= 70) return "var(--amber)";
+  return "var(--red)";
+}
+
+/* ══════════════════════════════════════════════════
+   ATTACH EVENTS — called after every render
+══════════════════════════════════════════════════ */
+function attachEvents() {
+  const si = document.getElementById('si');
+  const sc = document.getElementById('sc');
+  const ss = document.getElementById('ss');
+  const exportBtn = document.getElementById('btn-export');
+
+  if (si) si.addEventListener('input', () => render(si.value, sc ? sc.value : '', ss ? ss.value : ''));
+  if (sc) sc.addEventListener('change', () => render(si ? si.value : '', sc.value, ss ? ss.value : ''));
+  if (ss) ss.addEventListener('change', () => render(si ? si.value : '', sc ? sc.value : '', ss.value));
+  if (exportBtn) exportBtn.addEventListener('click', () => exportProfessionalPDF());
+}
+
+/* ══════════════════════════════════════════════════
+   RENDER
+══════════════════════════════════════════════════ */
+function render(search, comp, statusF) {
+  search  = (search  === undefined || search  === null) ? '' : String(search);
+  comp    = (comp    === undefined || comp    === null) ? '' : String(comp);
+  statusF = (statusF === undefined || statusF === null) ? '' : String(statusF);
+
+  const list = KPIs.filter(k => {
+    const ms  = k.name.includes(search) || k.company.includes(search);
+    const mc  = comp    ? k.company === comp          : true;
+    const mst = statusF ? statusOf(k).lbl === statusF : true;
+    return ms && mc && mst;
+  });
+
+  const completed = KPIs.filter(k => k.pct >= 100).length;
+  const watching  = KPIs.filter(k => k.pct >= 80 && k.pct < 100).length;
+  const late      = KPIs.filter(k => k.pct < 80).length;
+  const total     = KPIs.length;
+  const cpct = Math.round(completed / total * 100);
+  const wpct = Math.round(watching  / total * 100);
+  const lpct = Math.round(late      / total * 100);
+  const npct = Math.max(0, 100 - cpct - wpct - lpct);
+
+  // DONUT SVG
+  const R = 52, cxy = 68, C = 2 * Math.PI * R;
+  let off = 0;
+  const segs = [[cpct,"var(--green)"],[wpct,"var(--amber)"],[lpct,"var(--red)"],[npct,"var(--line2)"]];
+  const arcs = segs.map(([p, col]) => {
+    const d = (p / 100) * C, g = C - d;
+    const el = `<circle cx="${cxy}" cy="${cxy}" r="${R}" fill="none" stroke="${col}" stroke-width="13" stroke-dasharray="${d.toFixed(1)} ${g.toFixed(1)}" stroke-dashoffset="${(C - off).toFixed(1)}" transform="rotate(-90 ${cxy} ${cxy})"/>`;
+    off += d; return el;
+  }).join("");
+
+  const companies = [...new Set(KPIs.map(k => k.company))];
+
+  /* SVG icons used inline in render */
+  const svgCalendar = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+  const svgDownload = `<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
+  const svgPlus = `<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+  const svgSearch = `<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`;
+  const svgTrendUp = `<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`;
+  const svgHeadphones = `<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>`;
+  const svgChevronDown = `<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`;
+  const svgCheck = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`;
+
+  document.getElementById("pageBody").innerHTML = `
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div>
+    <div class="page-title">التقارير الشهرية</div>
+    <div class="page-sub">
+      ${svgCalendar}
+      تقنية المعلومات - يونيو 2026 &nbsp;|&nbsp; المسؤول: هشام حمدي &nbsp;|&nbsp; الجهة: ذرى
+    </div>
+  </div>
+  <div class="ph-actions">
+    <button class="btn btn-outline" id="btn-export-header">${svgDownload} تصدير</button>
+    <button class="btn btn-primary">${svgPlus} إضافة تقرير</button>
+  </div>
+</div>
+
+<!-- STAT ROW -->
+<div class="stat-row">
+  <div class="sc sc-date">
+    <div class="date-icon">${svgCalendar.replace('width="14" height="14"','width="26" height="26"')}</div>
+    <div class="sc-lbl">آخر تحديث</div>
+    <div class="date-big">06 يوليو 2026</div>
+    <div class="date-time">10:30 صباحاً</div>
+  </div>
+  <div class="sc">
+    <div class="sc-icon" style="background:#ede9fe;color:#7c3aed">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+    </div>
+    <div class="sc-lbl">إجمالي المؤشرات</div>
+    <div class="sc-val">${total}</div>
+    <div class="sc-sub">مؤشر</div>
+  </div>
+  <div class="sc">
+    <div class="sc-icon" style="background:var(--amber-bg);color:var(--amber)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    </div>
+    <div class="sc-lbl">تحتاج متابعة</div>
+    <div class="sc-val" style="color:var(--amber)">${watching}</div>
+    <div class="sc-sub">مؤشرات</div>
+  </div>
+  <div class="sc">
+    <div class="sc-icon" style="background:var(--green-bg);color:var(--green)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div class="sc-lbl">مكتملة</div>
+    <div class="sc-val" style="color:var(--green)">${completed}</div>
+    <div class="sc-sub">مؤشر</div>
+  </div>
+  <div class="sc sc-kpi">
+    <div class="sc-kpi-left">
+      <div class="sc-lbl">نسبة الإنجاز العامة</div>
+      <div class="sc-kpi-val">83.88%</div>
+      <div class="sc-kpi-bar"><div class="sc-kpi-fill" style="width:83.88%"></div></div>
+    </div>
+    <div class="sc-kpi-arrow">${svgTrendUp}</div>
+  </div>
+</div>
+
+<!-- MIDDLE GRID -->
+<div class="mid-grid">
+  <!-- DONUT -->
+  <div class="panel">
+    <div class="ph"><span class="ph-title">نسبة الإنجاز حسب الحالة</span><span class="ph-link">عرض الكل</span></div>
+    <div class="donut-row">
+      <svg width="136" height="136" viewBox="0 0 136 136" style="flex-shrink:0">
+        <circle cx="68" cy="68" r="52" fill="none" stroke="var(--line)" stroke-width="13"/>
+        ${arcs}
+        <text x="68" y="63" text-anchor="middle" font-family="Cairo,sans-serif" font-size="22" font-weight="900" fill="var(--ink)">${total}</text>
+        <text x="68" y="78" text-anchor="middle" font-family="Cairo,sans-serif" font-size="10" fill="var(--ink3)">مؤشر</text>
+      </svg>
+      <div class="donut-legend">
+        <div class="dl"><div class="dl-sq" style="background:var(--green)"></div><div class="dl-lbl">مكتملة</div><div class="dl-n">${completed}</div><div class="dl-p">(${cpct}%)</div></div>
+        <div class="dl"><div class="dl-sq" style="background:var(--amber)"></div><div class="dl-lbl">متابعة</div><div class="dl-n">${watching}</div><div class="dl-p">(${wpct}%)</div></div>
+        <div class="dl"><div class="dl-sq" style="background:var(--red)"></div><div class="dl-lbl">متأخرة</div><div class="dl-n">${late}</div><div class="dl-p">(${lpct}%)</div></div>
+        <div class="dl"><div class="dl-sq" style="background:var(--line2)"></div><div class="dl-lbl">لم تبدأ</div><div class="dl-n">0</div><div class="dl-p">(0%)</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACHIEVEMENTS -->
+  <div class="panel">
+    <div class="ph"><span class="ph-title">أعلى الإنجازات</span><span class="ph-link">عرض الكل</span></div>
+    ${ACHIEVEMENTS.map(a => {
+      const parts = a.split(' — ');
+      const name = parts[0], pct = parts[1] || '';
+      return `<div class="list-item"><div class="li-check">${svgCheck}</div><div class="li-name">${name}</div><div class="li-pct" style="color:var(--green)">${pct}</div></div>`;
+    }).join("")}
+  </div>
+
+  <!-- RISKS -->
+  <div class="panel">
+    <div class="ph"><span class="ph-title">أعلى المخاطر</span><span class="ph-link">عرض الكل</span></div>
+    ${RISKS.map(r => `
+    <div class="list-item">
+      <div class="li-dot" style="background:${r.color}"></div>
+      <div class="li-name">${r.name}</div>
+      <div class="li-pct" style="color:${r.color}">${r.pct}</div>
+      <div class="li-tag badge ${r.color.includes('red') ? 'bg-red' : 'bg-amber'}">متابعة</div>
+    </div>`).join("")}
+  </div>
+</div>
+
+<!-- TABLE -->
+<div class="table-section">
+  <div class="t-toolbar">
+    <span class="t-toolbar-title">المؤشرات الرئيسية</span>
+    <div class="t-search">
+      <span class="t-si">${svgSearch}</span>
+      <input id="si" type="text" placeholder="بحث عن مؤشر..." value="${search}"/>
+    </div>
+    <select id="sc" class="t-sel">
+      <option value="">جميع الشركات</option>
+      ${companies.map(c => `<option ${comp === c ? "selected" : ""}>${c}</option>`).join("")}
+    </select>
+    <select id="ss" class="t-sel">
+      <option value="">جميع الحالات</option>
+      <option ${statusF === "مكتملة" ? "selected" : ""}>مكتملة</option>
+      <option ${statusF === "متابعة" ? "selected" : ""}>متابعة</option>
+      <option ${statusF === "متأخرة" ? "selected" : ""}>متأخرة</option>
+    </select>
+    <button class="t-export ml-auto" id="btn-export">${svgDownload} تصدير</button>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:36px">#</th>
+        <th>المؤشر</th>
+        <th>المستهدف الشهري</th>
+        <th>الإنجاز الفعلي</th>
+        <th>نسبة الإنجاز</th>
+        <th>الحالة</th>
+        <th>الانحراف</th>
+        <th>الاتجاه</th>
+        <th>الإجراءات</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${list.map(k => {
+        const s   = statusOf(k);
+        const c   = pColor(k.pct);
+        const dev = (k.pct - 100).toFixed(2);
+        const dirSvg = k.dir === "تصاعدي"
+          ? `<span class="td-dir" style="color:var(--green)">${svgTrendUp}</span>`
+          : `<span class="td-dir" style="color:var(--amber)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg></span>`;
+        return `
+        <tr data-id="${k.id}">
+          <td class="td-n">${k.id}</td>
+          <td><div class="td-name">${k.name}</div><div class="td-sub">${k.company}</div></td>
+          <td class="td-num">${k.target}.0</td>
+          <td class="td-num" style="font-weight:700;color:var(--ink)">${k.actual}</td>
+          <td><div class="td-bar"><div class="td-track"><div class="td-fill" style="width:${Math.min(k.pct,100)}%;background:${c}"></div></div><span class="td-pct" style="color:${c}">${k.pct.toFixed(2)}%</span></div></td>
+          <td><span class="badge ${s.cls}">${s.ic} ${s.lbl}</span></td>
+          <td><span class="${parseFloat(dev) >= 0 ? 'delta-pos' : 'delta-neg'}">${parseFloat(dev) >= 0 ? '+' : ''}${dev}</span></td>
+          <td>${dirSvg}</td>
+          <td><button class="btn-detail" data-id="${k.id}">عرض التفاصيل ›</button></td>
+        </tr>`;
+      }).join("")}
+    </tbody>
+  </table>
+  <div class="show-more"><button>${svgChevronDown} يتم عرض ${list.length} من ${total} مؤشر</button></div>
+</div>
+
+<!-- HELP FLOAT -->
+<div class="help-float" id="help-float">
+  <div class="help-ic">${svgHeadphones}</div>
+  <div>
+    <div>محتاج مساعدة؟</div>
+    <div style="font-size:10.5px;opacity:.8">تواصل مع فريق الدعم</div>
+  </div>
+</div>`;
+
+  /* Re-attach all events after render */
+  attachEvents();
+
+  /* Table row clicks & detail buttons */
+  document.querySelectorAll('tbody tr[data-id]').forEach(row => {
+    row.addEventListener('click', () => showDetail(row.dataset.id));
+  });
+  document.querySelectorAll('.btn-detail[data-id]').forEach(btn => {
+    btn.addEventListener('click', e => { e.stopPropagation(); showDetail(btn.dataset.id); });
+  });
+
+  /* Export header btn */
+  const expH = document.getElementById('btn-export-header');
+  if (expH) expH.addEventListener('click', () => exportProfessionalPDF());
+}
+</script>
+<script>
+/* ══════════════════════════════════════════════════
+   PROFESSIONAL PDF EXPORT  (html2canvas + jsPDF)
+══════════════════════════════════════════════════ */
+function exportProfessionalPDF() {
+  const ov = document.createElement('div');
+  ov.className = 'pdf-loading';
+  ov.innerHTML = '<div class="pdf-spinner"></div><div class="pdf-loading-text">جارٍ إنشاء التقرير…</div>';
+  document.body.appendChild(ov);
+  setTimeout(() => _buildHTMLPDF(ov), 80);
+}
+
+function _buildHTMLPDF(ov) {
+  const completed = KPIs.filter(k=>k.pct>=100).length;
+  const watching  = KPIs.filter(k=>k.pct>=80&&k.pct<100).length;
+  const late      = KPIs.filter(k=>k.pct<80).length;
+  const avgPct    = (KPIs.reduce((s,k)=>s+k.pct,0)/KPIs.length).toFixed(1);
+
+  function stOf(k) {
+    if (k.pct>=100) return {lbl:'مكتملة', bg:'#e6f4ec', col:'#2d7d4f'};
+    if (k.pct>=80)  return {lbl:'متابعة', bg:'#fff3e0', col:'#c97b1a'};
+    return                 {lbl:'متأخرة', bg:'#fdecea', col:'#c0392b'};
+  }
+
+  /* ── CSS injected into the hidden page ── */
+  const CSS = `
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap');
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Cairo',sans-serif;background:#f0f0f0;color:#1a1a1a;direction:rtl;}
+    .page{width:794px;height:1123px;background:#fff;position:relative;overflow:hidden;display:flex;flex-direction:column;margin-bottom:20px;}
+
+    /* SHARED HEADER / FOOTER */
+    .page-header{background:linear-gradient(135deg,#1a4f2e 0%,#2d7d4f 55%,#3a9060 100%);padding:18px 40px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+    .ph-brand .ph-name{font-size:17px;font-weight:900;color:#fff;letter-spacing:-.3px;}
+    .ph-brand .ph-sub{font-size:10px;color:rgba(255,255,255,.65);margin-top:1px;letter-spacing:.5px;}
+    .ph-right{text-align:left;}
+    .ph-right .ph-title{font-size:13px;font-weight:800;color:#fff;}
+    .ph-right .ph-date{font-size:10px;color:rgba(255,255,255,.65);margin-top:2px;}
+    .page-strip{height:3px;background:linear-gradient(90deg,#2d7d4f 0%,#a8d5bc 100%);flex-shrink:0;}
+    .page-footer{background:#f5f4f0;border-top:1px solid #e6e3db;padding:9px 40px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;margin-top:auto;}
+    .page-footer .ft,.page-footer .pg{font-size:9px;color:#999;}
+    .page-body{flex:1;padding:22px 40px;overflow:hidden;}
+    .sec-title{font-size:14px;font-weight:800;color:#1a1a1a;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid #e6e3db;display:flex;align-items:center;gap:8px;}
+    .sec-title::before{content:'';display:block;width:3px;height:16px;background:#2d7d4f;border-radius:99px;flex-shrink:0;}
+
+    /* COVER */
+    .cover-hero{background:linear-gradient(135deg,#1a4f2e 0%,#2d7d4f 55%,#3a9060 100%);padding:48px 48px 36px;position:relative;overflow:hidden;flex-shrink:0;}
+    .cover-deco1{position:absolute;top:-40px;left:-40px;width:260px;height:260px;border-radius:50%;background:rgba(255,255,255,.05);}
+    .cover-deco2{position:absolute;bottom:-50px;right:60px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.04);}
+    .cover-toprow{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:36px;}
+    .logo-name{font-size:36px;font-weight:900;color:#fff;letter-spacing:-1px;line-height:1;}
+    .logo-sub{font-size:10px;font-weight:500;color:rgba(255,255,255,.6);letter-spacing:3px;margin-top:4px;text-transform:uppercase;}
+    .cover-confidential{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:6px;padding:5px 14px;font-size:11px;color:#fff;font-weight:600;}
+    .cover-headline{font-size:30px;font-weight:900;color:#fff;line-height:1.25;margin-bottom:8px;}
+    .cover-subline{font-size:14px;color:rgba(255,255,255,.7);}
+    .cover-strip{height:5px;background:linear-gradient(90deg,#fff 0%,rgba(255,255,255,.2) 100%);flex-shrink:0;}
+    .cover-content{flex:1;padding:24px 48px;display:flex;flex-direction:column;gap:18px;overflow:hidden;}
+    .meta-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+    .meta-card{background:#f7f6f2;border:1px solid #e6e3db;border-radius:10px;padding:14px 12px;text-align:center;}
+    .meta-card .ml{font-size:9.5px;color:#999;font-weight:600;letter-spacing:.4px;margin-bottom:5px;}
+    .meta-card .mv{font-size:14px;font-weight:800;color:#1a1a1a;}
+    .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+    .stat-box{border-radius:10px;padding:16px 14px;display:flex;align-items:center;gap:12px;}
+    .stat-icon{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+    .stat-val{font-size:26px;font-weight:900;line-height:1;}
+    .stat-lbl{font-size:10px;font-weight:600;margin-top:3px;opacity:.7;}
+    .top-table{width:100%;border-collapse:collapse;}
+    .top-table thead tr{background:#f7f6f2;}
+    .top-table thead th{font-size:10px;font-weight:700;color:#888;padding:8px 10px;text-align:right;letter-spacing:.4px;}
+    .top-table tbody tr:nth-child(even){background:#fafafa;}
+    .top-table td{padding:8px 10px;vertical-align:middle;border-bottom:1px solid #f0efeb;}
+    .rank-circle{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;}
+    .prog-wrap{display:flex;align-items:center;gap:8px;}
+    .prog-track{flex:1;height:5px;background:#e6e3db;border-radius:99px;overflow:hidden;}
+    .prog-fill{height:100%;border-radius:99px;}
+
+    /* KPI TABLE */
+    table.kpi-table{width:100%;border-collapse:collapse;font-size:11.5px;}
+    table.kpi-table thead tr{background:#2d7d4f;}
+    table.kpi-table thead th{color:#fff;font-weight:700;padding:9px 10px;font-size:10.5px;text-align:right;}
+    table.kpi-table tbody tr:nth-child(even){background:#f9f8f5;}
+    table.kpi-table td{padding:9px 10px;vertical-align:middle;border-bottom:1px solid #f0efeb;}
+    .td-id{font-weight:700;color:#aaa;font-size:10.5px;text-align:center;min-width:28px;}
+    .td-nm{font-weight:700;font-size:12px;color:#1a1a1a;}
+    .td-co{font-size:10px;color:#999;margin-top:1px;}
+    .td-c{text-align:center;font-weight:700;font-size:12px;}
+    .pbar{display:flex;align-items:center;gap:6px;}
+    .pbar-track{flex:1;height:5px;background:#e6e3db;border-radius:99px;overflow:hidden;min-width:50px;}
+    .pbar-fill{height:100%;border-radius:99px;}
+    .pbar-v{font-weight:900;font-size:11.5px;min-width:42px;}
+    .bdg{display:inline-flex;align-items:center;justify-content:center;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700;white-space:nowrap;}
+
+    /* DETAILS */
+    .det-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .det-card{border-radius:8px;overflow:hidden;border:1px solid #e6e3db;}
+    .det-head{padding:9px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+    .det-head-info{flex:1;min-width:0;}
+    .dh-name{font-size:11.5px;font-weight:800;color:#fff;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .dh-meta{font-size:9.5px;color:rgba(255,255,255,.7);margin-top:2px;}
+    .dh-pct{font-size:13px;font-weight:900;color:#fff;background:rgba(255,255,255,.18);padding:3px 9px;border-radius:6px;flex-shrink:0;white-space:nowrap;}
+    .det-body{padding:10px 12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;background:#fff;}
+    .ds-lbl{font-size:9px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;margin-bottom:4px;padding:2px 6px;border-radius:4px;display:inline-block;}
+    .ds-txt{font-size:10.5px;color:#444;line-height:1.65;}
+
+    /* SUMMARY */
+    .sum-2col{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    .sum-panel{border-radius:10px;border:1px solid #e6e3db;overflow:hidden;}
+    .sum-ph{padding:11px 16px;font-size:13px;font-weight:800;display:flex;align-items:center;gap:8px;}
+    .sum-pb{padding:0 16px 12px;}
+    .sum-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0efeb;}
+    .sum-row:last-child{border:none;}
+    .sum-dot{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;}
+    .sum-rbar{flex:1;}
+    .sum-rname{font-size:11.5px;font-weight:600;margin-bottom:3px;color:#1a1a1a;}
+    .sum-rpct-lbl{font-size:12px;font-weight:900;min-width:44px;text-align:left;}
+  `;
+
+  /* shared header / footer */
+  const pgHeader = (title) => `
+    <div class="page-header">
+      <div class="ph-brand"><div class="ph-name">THC Holding Group</div><div class="ph-sub">IT DEPARTMENT</div></div>
+      <div class="ph-right"><div class="ph-title">${title}</div><div class="ph-date">يونيو ٢٠٢٦ · هشام حمدي</div></div>
+    </div><div class="page-strip"></div>`;
+  const pgFooter = (pg) => `
+    <div class="page-footer">
+      <span class="ft">THC Holding Group — IT Monthly Performance Report — June 2026</span>
+      <span class="pg">الصفحة ${pg}</span>
+    </div>`;
+
+  /* ══════════════ PAGE 1: COVER ══════════════ */
+  const top5 = [...KPIs].sort((a,b)=>b.pct-a.pct).slice(0,5);
+  const coverPage = `
+  <div class="page">
+    <div class="cover-hero">
+      <div class="cover-deco1"></div><div class="cover-deco2"></div>
+      <div class="cover-toprow">
+        <div><div class="logo-name">THC</div><div class="logo-sub">Holding Group</div></div>
+        <div class="cover-confidential">🔒 سري — للاستخدام الداخلي</div>
+      </div>
+      <div class="cover-headline">التقرير الشهري لمؤشرات<br>الأداء الرئيسية</div>
+      <div class="cover-subline">إدارة تقنية المعلومات &nbsp;·&nbsp; يونيو ٢٠٢٦</div>
+    </div>
+    <div class="cover-strip"></div>
+    <div class="cover-content">
+      <div class="meta-row">
+        <div class="meta-card"><div class="ml">المسؤول</div><div class="mv">هشام حمدي</div></div>
+        <div class="meta-card"><div class="ml">الجهة</div><div class="mv">ذرى / THC</div></div>
+        <div class="meta-card"><div class="ml">تاريخ التقرير</div><div class="mv">٠٦ يوليو ٢٠٢٦</div></div>
+        <div class="meta-card"><div class="ml">إجمالي المؤشرات</div><div class="mv">${KPIs.length} مؤشر</div></div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-box" style="background:#e6f4ec"><div class="stat-icon" style="background:#2d7d4f;color:#fff">✓</div><div><div class="stat-val" style="color:#2d7d4f">${completed}</div><div class="stat-lbl" style="color:#2d7d4f">مكتملة</div></div></div>
+        <div class="stat-box" style="background:#fff3e0"><div class="stat-icon" style="background:#c97b1a;color:#fff">⏱</div><div><div class="stat-val" style="color:#c97b1a">${watching}</div><div class="stat-lbl" style="color:#c97b1a">تحتاج متابعة</div></div></div>
+        <div class="stat-box" style="background:#fdecea"><div class="stat-icon" style="background:#c0392b;color:#fff">!</div><div><div class="stat-val" style="color:#c0392b">${late}</div><div class="stat-lbl" style="color:#c0392b">متأخرة</div></div></div>
+        <div class="stat-box" style="background:#e3f0fd"><div class="stat-icon" style="background:#1565c0;color:#fff">%</div><div><div class="stat-val" style="color:#1565c0">${avgPct}%</div><div class="stat-lbl" style="color:#1565c0">متوسط الإنجاز</div></div></div>
+      </div>
+      <div>
+        <div class="sec-title">أعلى المؤشرات أداءً</div>
+        <table class="top-table">
+          <thead><tr><th style="width:30px">#</th><th>المؤشر</th><th style="width:110px">الشركة</th><th style="width:180px">نسبة الإنجاز</th><th style="width:60px;text-align:center">النسبة</th></tr></thead>
+          <tbody>${top5.map((k,i)=>{const st=stOf(k);return `
+            <tr>
+              <td><span class="rank-circle" style="background:${st.col}">${i+1}</span></td>
+              <td style="font-size:12px;font-weight:700">${esc(k.name)}</td>
+              <td style="font-size:11px;color:#888">${esc(k.company)}</td>
+              <td><div class="prog-wrap"><div class="prog-track"><div class="prog-fill" style="width:${Math.min(k.pct,100)}%;background:${st.col}"></div></div></div></td>
+              <td style="text-align:center;font-weight:900;font-size:12px;color:${st.col}">${k.pct.toFixed(1)}%</td>
+            </tr>`;}).join('')}</tbody>
+        </table>
+      </div>
+    </div>
+    ${pgFooter(1)}
+  </div>`;
+
+  /* ── PAGE 2: KPI TABLE ── */
+  const tableRows = KPIs.map((k,i)=>{
+    const st=stOf(k); const dev=(k.pct-100).toFixed(1);
+    return `<tr>
+      <td class="td-id">${esc(k.id)}</td>
+      <td><div class="td-nm">${esc(k.name)}</div><div class="td-co">${esc(k.company)}</div></td>
+      <td class="td-c">${k.target}</td>
+      <td class="td-c">${k.actual}</td>
+      <td><div class="pbar"><div class="pbar-track"><div class="pbar-fill" style="width:${Math.min(k.pct,100)}%;background:${st.col}"></div></div><span class="pbar-v" style="color:${st.col}">${k.pct.toFixed(1)}%</span></div></td>
+      <td><span class="bdg" style="background:${st.bg};color:${st.col}">${st.lbl}</span></td>
+      <td class="td-c" style="color:${parseFloat(dev)>=0?'#2d7d4f':'#c0392b'}">${parseFloat(dev)>=0?'+':''}${dev}</td>
+    </tr>`;
+  }).join('');
+
+  const tablePage = `
+  <div class="page">
+    ${pgHeader('جدول المؤشرات الرئيسية')}
+    <div class="page-body">
+      <div class="sec-title">المؤشرات الرئيسية — ${KPIs.length} مؤشر</div>
+      <table class="kpi-table">
+        <thead><tr>
+          <th style="width:32px;text-align:center">#</th>
+          <th>المؤشر / الشركة</th>
+          <th style="width:58px;text-align:center">المستهدف</th>
+          <th style="width:58px;text-align:center">الفعلي</th>
+          <th style="width:150px">نسبة الإنجاز</th>
+          <th style="width:72px;text-align:center">الحالة</th>
+          <th style="width:60px;text-align:center">الانحراف</th>
+        </tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+    </div>
+    ${pgFooter(2)}
+  </div>`;
+
+  /* ── PAGES 3+: DETAILS (paginated, 6 cards per page) ── */
+  const CARDS_PER_PAGE = 6;
+  const detailPagesArr = [];
+  for (let start = 0; start < KPIs.length; start += CARDS_PER_PAGE) {
+    const chunk = KPIs.slice(start, start + CARDS_PER_PAGE);
+    const pgNum = 3 + Math.floor(start / CARDS_PER_PAGE);
+    const range = KPIs.length > CARDS_PER_PAGE
+      ? ` (${start+1}–${Math.min(start+CARDS_PER_PAGE,KPIs.length)} من ${KPIs.length})`
+      : '';
+    const cards = chunk.map(k=>{
+      const st=stOf(k);
+      return `
+      <div class="det-card">
+        <div class="det-head" style="background:${st.col}">
+          <div class="det-head-info">
+            <div class="dh-name">${esc(k.name)}</div>
+            <div class="dh-meta">#${esc(k.id)} · ${esc(k.company)}</div>
+          </div>
+          <div class="dh-pct">${k.pct.toFixed(1)}%</div>
+        </div>
+        <div class="det-body">
+          <div>
+            <div class="ds-lbl" style="background:#fff3e0;color:#c97b1a">⚠ سبب الانحراف</div>
+            <div class="ds-txt">${esc(k.reason)}</div>
+          </div>
+          <div>
+            <div class="ds-lbl" style="background:#e6f4ec;color:#2d7d4f">✓ إجراء المعالجة</div>
+            <div class="ds-txt">${esc(k.action)}</div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+    detailPagesArr.push(`
+    <div class="page">
+      ${pgHeader('تفاصيل الأسباب والإجراءات')}
+      <div class="page-body">
+        <div class="sec-title">أسباب الانحراف وإجراءات المعالجة${range}</div>
+        <div class="det-grid">${cards}</div>
+      </div>
+      ${pgFooter(pgNum)}
+    </div>`);
+  }
+
+  /* ── LAST PAGE: SUMMARY ── */
+  const lastPg = 3 + detailPagesArr.length;
+  const achItems = ACHIEVEMENTS.map(a=>{
+    const parts=a.split(' — ');
+    return `<div class="sum-row">
+      <div class="sum-dot" style="background:#e6f4ec;color:#2d7d4f">✓</div>
+      <div style="flex:1;font-size:12px;font-weight:600">${esc(parts[0])}</div>
+      <div style="font-size:12px;font-weight:800;color:#2d7d4f">${esc(parts[1]||'')}</div>
+    </div>`;
+  }).join('');
+
+  const riskItems = RISKS.map(r=>{
+    const col=r.color.includes('red')?'#c0392b':'#c97b1a';
+    const pv=parseFloat(r.pct)||0;
+    return `<div class="sum-row">
+      <div class="sum-rbar">
+        <div class="sum-rname">${esc(r.name)}</div>
+        <div class="prog-wrap"><div class="prog-track"><div class="prog-fill" style="width:${pv}%;background:${col}"></div></div></div>
+      </div>
+      <div class="sum-rpct-lbl" style="color:${col}">${esc(r.pct)}</div>
+    </div>`;
+  }).join('');
+
+  const summaryPage = `
+  <div class="page">
+    ${pgHeader('الملخص التنفيذي')}
+    <div class="page-body">
+      <div class="sec-title">الملخص التنفيذي</div>
+      <div class="sum-2col">
+        <div class="sum-panel">
+          <div class="sum-ph" style="background:#e6f4ec;color:#2d7d4f">✓ الإنجازات المكتملة</div>
+          <div class="sum-pb">${achItems}</div>
+        </div>
+        <div class="sum-panel">
+          <div class="sum-ph" style="background:#fdecea;color:#c0392b">⚠ المخاطر والمؤشرات المتعثرة</div>
+          <div class="sum-pb">${riskItems}</div>
+        </div>
+      </div>
+      <div style="margin-top:16px;background:#f7f6f2;border-radius:10px;padding:16px 20px;">
+        <div style="font-size:13px;font-weight:800;color:#1a1a1a;margin-bottom:12px;">نسبة الإنجاز الإجمالية — ${avgPct}%</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+          <div style="background:#e6f4ec;border-radius:8px;padding:12px;text-align:center"><div style="font-size:26px;font-weight:900;color:#2d7d4f">${completed}</div><div style="font-size:10px;font-weight:700;color:#2d7d4f;margin-top:4px">مكتملة</div></div>
+          <div style="background:#fff3e0;border-radius:8px;padding:12px;text-align:center"><div style="font-size:26px;font-weight:900;color:#c97b1a">${watching}</div><div style="font-size:10px;font-weight:700;color:#c97b1a;margin-top:4px">متابعة</div></div>
+          <div style="background:#fdecea;border-radius:8px;padding:12px;text-align:center"><div style="font-size:26px;font-weight:900;color:#c0392b">${late}</div><div style="font-size:10px;font-weight:700;color:#c0392b;margin-top:4px">متأخرة</div></div>
+          <div style="background:#e3f0fd;border-radius:8px;padding:12px;text-align:center"><div style="font-size:26px;font-weight:900;color:#1565c0">${KPIs.length}</div><div style="font-size:10px;font-weight:700;color:#1565c0;margin-top:4px">المجموع</div></div>
+        </div>
+      </div>
+    </div>
+    ${pgFooter(lastPg)}
+  </div>`;
+
+  /* ── assemble & render ── */
+  const allPagesHTML = [coverPage, tablePage, ...detailPagesArr, summaryPage].join('\n');
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'position:fixed;top:-999999px;left:-999999px;width:794px;z-index:-999;background:#f0f0f0;';
+  wrap.innerHTML = `<style>${CSS}</style>${allPagesHTML}`;
+  document.body.appendChild(wrap);
+
+  const pages = wrap.querySelectorAll('.page');
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'px', format:[794,1123], hotfixes:['px_scaling'] });
+  const pdfW = doc.internal.pageSize.getWidth();
+  const pdfH = doc.internal.pageSize.getHeight();
+
+  const captureNext = (i) => {
+    if (i >= pages.length) {
+      wrap.remove();
+      ov.remove();
+      doc.save('تقرير-تقنية-المعلومات-يونيو-2026.pdf');
+      return;
+    }
+    html2canvas(pages[i], {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+      width: 794,
+      height: 1123,
+      windowWidth: 794,
+    }).then(canvas => {
+      const imgData = canvas.toDataURL('image/jpeg', 0.92);
+      if (i > 0) doc.addPage([794,1123], 'portrait');
+      doc.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
+      captureNext(i + 1);
+    });
+  };
+
+  setTimeout(() => captureNext(0), 700);
+}
+
+/* ══════════════════════════════════════════════════
+   DETAIL MODAL
+══════════════════════════════════════════════════ */
+function showDetail(id) {
+  const k = KPIs.find(x => x.id == id);
+  if (!k) return;
+  const s   = statusOf(k);
+  const c   = pColor(k.pct);
+  const dev = (k.pct - 100).toFixed(2);
+
+  let modal = document.getElementById("modal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "modal";
+    modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)";
+    document.body.appendChild(modal);
+  }
+  modal.onclick = e => { if (e.target === modal) modal.remove(); };
+  modal.innerHTML = `
+  <div style="background:var(--card);border-radius:16px;padding:24px;max-width:560px;width:100%;box-shadow:var(--shadow-md);max-height:85vh;overflow-y:auto">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px">
+      <div>
+        <div style="font-size:11px;color:var(--ink3);font-weight:700;margin-bottom:4px">مؤشر رقم ${k.id} — ${k.company}</div>
+        <div style="font-size:17px;font-weight:800;color:var(--ink)">${k.name}</div>
+      </div>
+      <button id="modal-close" style="background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:18px;color:var(--ink3);font-family:inherit;line-height:1">×</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+      <div style="background:var(--surface);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--ink3);font-weight:600;margin-bottom:4px">المستهدف</div>
+        <div style="font-size:22px;font-weight:800;color:var(--ink)">${k.target}</div>
+      </div>
+      <div style="background:var(--surface);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--ink3);font-weight:600;margin-bottom:4px">الفعلي</div>
+        <div style="font-size:22px;font-weight:800;color:var(--ink)">${k.actual}</div>
+      </div>
+      <div style="background:var(--surface);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--ink3);font-weight:600;margin-bottom:4px">نسبة الإنجاز</div>
+        <div style="font-size:22px;font-weight:800;color:${c}">${k.pct.toFixed(2)}%</div>
+      </div>
+      <div style="background:var(--surface);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--ink3);font-weight:600;margin-bottom:4px">الانحراف</div>
+        <div style="font-size:22px;font-weight:800;color:${parseFloat(dev) >= 0 ? 'var(--green)' : 'var(--red)'}">${parseFloat(dev) >= 0 ? '+' : ''}${dev}</div>
+      </div>
+    </div>
+    <div style="background:var(--surface);border-radius:10px;padding:14px;margin-bottom:10px">
+      <div style="font-size:10.5px;font-weight:700;color:var(--amber);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px">⚠ سبب الانحراف</div>
+      <p style="font-size:13px;color:var(--ink2);line-height:1.8">${k.reason}</p>
+    </div>
+    <div style="background:var(--green-bg);border-radius:10px;padding:14px">
+      <div style="font-size:10.5px;font-weight:700;color:var(--green);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:4px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> إجراء المعالجة</div>
+      <p style="font-size:13px;color:var(--ink2);line-height:1.8">${k.action}</p>
+    </div>
+  </div>`;
+  document.getElementById('modal-close').addEventListener('click', () => modal.remove());
+}
+
+/* ══════════════════════════════════════════════════
+   THEME TOGGLE
+══════════════════════════════════════════════════ */
+function toggleTheme() {
+  const html   = document.documentElement;
+  const isDark = html.getAttribute("data-theme") === "dark";
+  html.setAttribute("data-theme", isDark ? "light" : "dark");
+
+  const moon = document.getElementById('icon-moon');
+  const sun  = document.getElementById('icon-sun');
+  if (moon && sun) {
+    moon.style.display = isDark ? 'block' : 'none';
+    sun.style.display  = isDark ? 'none'  : 'block';
+  }
+  localStorage.setItem("theme", isDark ? "light" : "dark");
+}
+
+/* ══════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  /* Restore saved theme */
+  const saved = localStorage.getItem("theme");
+  if (saved === "dark") {
+    document.documentElement.setAttribute("data-theme", "dark");
+    const moon = document.getElementById('icon-moon');
+    const sun  = document.getElementById('icon-sun');
+    if (moon) moon.style.display = 'none';
+    if (sun)  sun.style.display  = 'block';
+  }
+
+  /* Theme button */
+  const btnTheme = document.getElementById('btn-theme');
+  if (btnTheme) btnTheme.addEventListener('click', toggleTheme);
+
+  /* Initial render */
+  render('', '', '');
+});
+</script>
+</div><!-- /.app -->
+</body>
+</html>
