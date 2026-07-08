@@ -1848,43 +1848,70 @@ function _buildHTMLPDF(ov) {
     ${pgFooter(lastPg)}
   </div>`;
 
-  /* ── assemble & render ── */
+  /* ── assemble & render in a hidden iframe ── */
   const allPagesHTML = [coverPage, tablePage, ...detailPagesArr, summaryPage].join('\n');
-  const wrap = document.createElement('div');
-  wrap.style.cssText = 'position:fixed;top:-999999px;left:-999999px;width:794px;z-index:-999;background:#f0f0f0;';
-  wrap.innerHTML = `<style>${CSS}</style>${allPagesHTML}`;
-  document.body.appendChild(wrap);
 
-  const pages = wrap.querySelectorAll('.page');
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:fixed;top:0;left:0;width:794px;height:1px;border:none;opacity:0;pointer-events:none;z-index:-1;';
+  document.body.appendChild(iframe);
+
+  const iDoc = iframe.contentDocument || iframe.contentWindow.document;
+  iDoc.open();
+  iDoc.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>${CSS}</style>
+    </head><body>${allPagesHTML}</body></html>`);
+  iDoc.close();
+
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation:'portrait', unit:'px', format:[794,1123], hotfixes:['px_scaling'] });
   const pdfW = doc.internal.pageSize.getWidth();
   const pdfH = doc.internal.pageSize.getHeight();
 
-  const captureNext = (i) => {
-    if (i >= pages.length) {
-      wrap.remove();
-      ov.remove();
-      doc.save('تقرير-تقنية-المعلومات-يونيو-2026.pdf');
-      return;
-    }
-    html2canvas(pages[i], {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#ffffff',
-      width: 794,
-      height: 1123,
-      windowWidth: 794,
-    }).then(canvas => {
-      const imgData = canvas.toDataURL('image/jpeg', 0.92);
-      if (i > 0) doc.addPage([794,1123], 'portrait');
-      doc.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
-      captureNext(i + 1);
-    });
+  const doCapture = () => {
+    const pages = iDoc.querySelectorAll('.page');
+    if (!pages.length) { iframe.remove(); ov.remove(); return; }
+
+    const captureNext = (i) => {
+      if (i >= pages.length) {
+        iframe.remove();
+        ov.remove();
+        doc.save('تقرير-تقنية-المعلومات-يونيو-2026.pdf');
+        return;
+      }
+      iframe.style.height = '1123px';
+      html2canvas(pages[i], {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        width: 794,
+        height: 1123,
+        windowWidth: 794,
+        logging: false,
+        onclone: (clonedDoc) => {
+          Array.from(clonedDoc.querySelectorAll('.page')).forEach((p,idx) => {
+            p.style.display = idx === i ? 'flex' : 'none';
+          });
+        }
+      }).then(canvas => {
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        if (i > 0) doc.addPage([794,1123], 'portrait');
+        doc.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
+        captureNext(i + 1);
+      }).catch(err => {
+        console.error('capture error page', i, err);
+        captureNext(i + 1);
+      });
+    };
+    captureNext(0);
   };
 
-  setTimeout(() => captureNext(0), 700);
+  /* wait for fonts to load inside the iframe */
+  iframe.onload = () => setTimeout(doCapture, 1200);
+  if (iDoc.readyState === 'complete') setTimeout(doCapture, 1200);
 }
 
 /* ══════════════════════════════════════════════════
