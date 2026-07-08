@@ -1549,6 +1549,17 @@ function render(search, comp, statusF) {
 /* ══════════════════════════════════════════════════
    PROFESSIONAL PDF EXPORT  (html2canvas + jsPDF)
 ══════════════════════════════════════════════════ */
+
+/* Escapes special HTML characters to prevent layout breakage */
+function esc(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 function exportProfessionalPDF() {
   const ov = document.createElement('div');
   ov.className = 'pdf-loading';
@@ -1573,7 +1584,8 @@ function _buildHTMLPDF(ov) {
   const CSS = `
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap');
     *{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:'Cairo',sans-serif;background:#f0f0f0;color:#1a1a1a;direction:rtl;}
+    html,body{font-family:'Cairo',sans-serif;background:#f0f0f0;color:#1a1a1a;direction:rtl;unicode-bidi:embed;}
+    table{direction:rtl;}
     .page{width:794px;height:1123px;background:#fff;position:relative;overflow:hidden;display:flex;flex-direction:column;margin-bottom:20px;}
 
     /* SHARED HEADER / FOOTER */
@@ -1604,7 +1616,7 @@ function _buildHTMLPDF(ov) {
     .cover-content{flex:1;padding:24px 48px;display:flex;flex-direction:column;gap:18px;overflow:hidden;}
     .meta-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
     .meta-card{background:#f7f6f2;border:1px solid #e6e3db;border-radius:10px;padding:14px 12px;text-align:center;}
-    .meta-card .ml{font-size:9.5px;color:#999;font-weight:600;letter-spacing:.4px;margin-bottom:5px;}
+    .meta-card .ml{font-size:10px;color:#999;font-weight:600;letter-spacing:0;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
     .meta-card .mv{font-size:14px;font-weight:800;color:#1a1a1a;}
     .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
     .stat-box{border-radius:10px;padding:16px 14px;display:flex;align-items:center;gap:12px;}
@@ -1613,7 +1625,7 @@ function _buildHTMLPDF(ov) {
     .stat-lbl{font-size:10px;font-weight:600;margin-top:3px;opacity:.7;}
     .top-table{width:100%;border-collapse:collapse;}
     .top-table thead tr{background:#f7f6f2;}
-    .top-table thead th{font-size:10px;font-weight:700;color:#888;padding:8px 10px;text-align:right;letter-spacing:.4px;}
+    .top-table thead th{font-size:10px;font-weight:700;color:#666;padding:8px 10px;text-align:right;white-space:nowrap;}
     .top-table tbody tr:nth-child(even){background:#fafafa;}
     .top-table td{padding:8px 10px;vertical-align:middle;border-bottom:1px solid #f0efeb;}
     .rank-circle{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;}
@@ -1623,8 +1635,8 @@ function _buildHTMLPDF(ov) {
 
     /* KPI TABLE */
     table.kpi-table{width:100%;border-collapse:collapse;font-size:11.5px;}
-    table.kpi-table thead tr{background:#2d7d4f;}
-    table.kpi-table thead th{color:#fff;font-weight:700;padding:9px 10px;font-size:10.5px;text-align:right;}
+    table.kpi-table thead tr{background:#2d7d4f !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    table.kpi-table thead th{color:#ffffff !important;font-weight:700;padding:9px 10px;font-size:10.5px;text-align:right;white-space:nowrap;}
     table.kpi-table tbody tr:nth-child(even){background:#f9f8f5;}
     table.kpi-table td{padding:9px 10px;vertical-align:middle;border-bottom:1px solid #f0efeb;}
     .td-id{font-weight:700;color:#aaa;font-size:10.5px;text-align:center;min-width:28px;}
@@ -1646,7 +1658,7 @@ function _buildHTMLPDF(ov) {
     .dh-meta{font-size:9.5px;color:rgba(255,255,255,.7);margin-top:2px;}
     .dh-pct{font-size:13px;font-weight:900;color:#fff;background:rgba(255,255,255,.18);padding:3px 9px;border-radius:6px;flex-shrink:0;white-space:nowrap;}
     .det-body{padding:10px 12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;background:#fff;}
-    .ds-lbl{font-size:9px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;margin-bottom:4px;padding:2px 6px;border-radius:4px;display:inline-block;}
+    .ds-lbl{font-size:10px;font-weight:800;letter-spacing:0;margin-bottom:4px;padding:3px 8px;border-radius:4px;display:inline-block;white-space:nowrap;}
     .ds-txt{font-size:10.5px;color:#444;line-height:1.65;}
 
     /* SUMMARY */
@@ -1663,14 +1675,34 @@ function _buildHTMLPDF(ov) {
   `;
 
   /* shared header / footer */
+  // Convert logo to base64 so it renders correctly inside the hidden div
+  function getLogoBase64(callback) {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function() {
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth; c.height = img.naturalHeight;
+      c.getContext('2d').drawImage(img, 0, 0);
+      callback(c.toDataURL('image/png'));
+    };
+    img.onerror = function() { callback(null); };
+    img.src = 'makeen-logo-white.png';
+  }
+
+  getLogoBase64(function(logoSrc) {
+
+  const logoHTML = logoSrc
+    ? `<img src="${logoSrc}" style="height:36px;max-width:140px;object-fit:contain;display:block;" />`
+    : `<div class="ph-name">Makeen</div>`;
+
   const pgHeader = (title) => `
     <div class="page-header">
-      <div class="ph-brand"><div class="ph-name">THC Holding Group</div><div class="ph-sub">IT DEPARTMENT</div></div>
+      <div class="ph-brand">${logoHTML}<div class="ph-sub" style="margin-top:4px;">IT DEPARTMENT</div></div>
       <div class="ph-right"><div class="ph-title">${title}</div><div class="ph-date">يونيو ٢٠٢٦ · هشام حمدي</div></div>
     </div><div class="page-strip"></div>`;
   const pgFooter = (pg) => `
     <div class="page-footer">
-      <span class="ft">THC Holding Group — IT Monthly Performance Report — June 2026</span>
+      <span class="ft">Makeen — IT Monthly Performance Report — June 2026</span>
       <span class="pg">الصفحة ${pg}</span>
     </div>`;
 
@@ -1681,7 +1713,10 @@ function _buildHTMLPDF(ov) {
     <div class="cover-hero">
       <div class="cover-deco1"></div><div class="cover-deco2"></div>
       <div class="cover-toprow">
-        <div><div class="logo-name">THC</div><div class="logo-sub">Holding Group</div></div>
+        <div>${logoSrc
+          ? `<img src="${logoSrc}" style="height:52px;max-width:180px;object-fit:contain;display:block;" />`
+          : `<div class="logo-name">Makeen</div>`
+        }</div>
         <div class="cover-confidential">🔒 سري — للاستخدام الداخلي</div>
       </div>
       <div class="cover-headline">التقرير الشهري لمؤشرات<br>الأداء الرئيسية</div>
@@ -1691,7 +1726,7 @@ function _buildHTMLPDF(ov) {
     <div class="cover-content">
       <div class="meta-row">
         <div class="meta-card"><div class="ml">المسؤول</div><div class="mv">هشام حمدي</div></div>
-        <div class="meta-card"><div class="ml">الجهة</div><div class="mv">ذرى / THC</div></div>
+        <div class="meta-card"><div class="ml">الجهة</div><div class="mv">ذرى / Makeen</div></div>
         <div class="meta-card"><div class="ml">تاريخ التقرير</div><div class="mv">٠٦ يوليو ٢٠٢٦</div></div>
         <div class="meta-card"><div class="ml">إجمالي المؤشرات</div><div class="mv">${KPIs.length} مؤشر</div></div>
       </div>
@@ -1703,8 +1738,14 @@ function _buildHTMLPDF(ov) {
       </div>
       <div>
         <div class="sec-title">أعلى المؤشرات أداءً</div>
-        <table class="top-table">
-          <thead><tr><th style="width:30px">#</th><th>المؤشر</th><th style="width:110px">الشركة</th><th style="width:180px">نسبة الإنجاز</th><th style="width:60px;text-align:center">النسبة</th></tr></thead>
+        <table class="top-table" style="direction:rtl;width:100%;border-collapse:collapse;">
+          <thead><tr style="background:#f0efeb;">
+            <th style="width:30px;background:#f0efeb;color:#555;font-size:10px;font-weight:700;padding:8px 10px;text-align:right;direction:rtl;">#</th>
+            <th style="background:#f0efeb;color:#555;font-size:10px;font-weight:700;padding:8px 10px;text-align:right;direction:rtl;">المؤشر</th>
+            <th style="width:110px;background:#f0efeb;color:#555;font-size:10px;font-weight:700;padding:8px 10px;text-align:right;direction:rtl;">الشركة</th>
+            <th style="width:180px;background:#f0efeb;color:#555;font-size:10px;font-weight:700;padding:8px 10px;text-align:right;direction:rtl;">نسبة الإنجاز</th>
+            <th style="width:60px;text-align:center;background:#f0efeb;color:#555;font-size:10px;font-weight:700;padding:8px 10px;direction:rtl;">النسبة</th>
+          </tr></thead>
           <tbody>${top5.map((k,i)=>{const st=stOf(k);return `
             <tr>
               <td><span class="rank-circle" style="background:${st.col}">${i+1}</span></td>
@@ -1738,15 +1779,15 @@ function _buildHTMLPDF(ov) {
     ${pgHeader('جدول المؤشرات الرئيسية')}
     <div class="page-body">
       <div class="sec-title">المؤشرات الرئيسية — ${KPIs.length} مؤشر</div>
-      <table class="kpi-table">
-        <thead><tr>
-          <th style="width:32px;text-align:center">#</th>
-          <th>المؤشر / الشركة</th>
-          <th style="width:58px;text-align:center">المستهدف</th>
-          <th style="width:58px;text-align:center">الفعلي</th>
-          <th style="width:150px">نسبة الإنجاز</th>
-          <th style="width:72px;text-align:center">الحالة</th>
-          <th style="width:60px;text-align:center">الانحراف</th>
+      <table class="kpi-table" style="direction:rtl;width:100%;border-collapse:collapse;">
+        <thead><tr style="background:#2d7d4f;">
+          <th style="width:32px;text-align:center;background:#2d7d4f;color:#fff;font-size:10.5px;font-weight:700;padding:9px 10px;direction:rtl;">#</th>
+          <th style="background:#2d7d4f;color:#fff;font-size:10.5px;font-weight:700;padding:9px 10px;text-align:right;direction:rtl;">المؤشر / الشركة</th>
+          <th style="width:58px;text-align:center;background:#2d7d4f;color:#fff;font-size:10.5px;font-weight:700;padding:9px 10px;direction:rtl;">المستهدف</th>
+          <th style="width:58px;text-align:center;background:#2d7d4f;color:#fff;font-size:10.5px;font-weight:700;padding:9px 10px;direction:rtl;">الفعلي</th>
+          <th style="width:150px;background:#2d7d4f;color:#fff;font-size:10.5px;font-weight:700;padding:9px 10px;text-align:right;direction:rtl;">نسبة الإنجاز</th>
+          <th style="width:72px;text-align:center;background:#2d7d4f;color:#fff;font-size:10.5px;font-weight:700;padding:9px 10px;direction:rtl;">الحالة</th>
+          <th style="width:60px;text-align:center;background:#2d7d4f;color:#fff;font-size:10.5px;font-weight:700;padding:9px 10px;direction:rtl;">الانحراف</th>
         </tr></thead>
         <tbody>${tableRows}</tbody>
       </table>
@@ -1848,70 +1889,50 @@ function _buildHTMLPDF(ov) {
     ${pgFooter(lastPg)}
   </div>`;
 
-  /* ── assemble & render in a hidden iframe ── */
+  /* ── assemble & render ── */
   const allPagesHTML = [coverPage, tablePage, ...detailPagesArr, summaryPage].join('\n');
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'position:fixed;top:-999999px;left:-999999px;width:794px;z-index:-999;background:#f0f0f0;direction:rtl;font-family:Cairo,sans-serif;';
+  wrap.innerHTML = `<style>${CSS}</style>${allPagesHTML}`;
+  document.body.appendChild(wrap);
 
-  const iframe = document.createElement('iframe');
-  iframe.style.cssText = 'position:fixed;top:0;left:0;width:794px;height:1px;border:none;opacity:0;pointer-events:none;z-index:-1;';
-  document.body.appendChild(iframe);
-
-  const iDoc = iframe.contentDocument || iframe.contentWindow.document;
-  iDoc.open();
-  iDoc.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-    <style>${CSS}</style>
-    </head><body>${allPagesHTML}</body></html>`);
-  iDoc.close();
-
+  const pages = wrap.querySelectorAll('.page');
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation:'portrait', unit:'px', format:[794,1123], hotfixes:['px_scaling'] });
   const pdfW = doc.internal.pageSize.getWidth();
   const pdfH = doc.internal.pageSize.getHeight();
 
-  const doCapture = () => {
-    const pages = iDoc.querySelectorAll('.page');
-    if (!pages.length) { iframe.remove(); ov.remove(); return; }
-
-    const captureNext = (i) => {
-      if (i >= pages.length) {
-        iframe.remove();
-        ov.remove();
-        doc.save('تقرير-تقنية-المعلومات-يونيو-2026.pdf');
-        return;
-      }
-      iframe.style.height = '1123px';
-      html2canvas(pages[i], {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        width: 794,
-        height: 1123,
-        windowWidth: 794,
-        logging: false,
-        onclone: (clonedDoc) => {
-          Array.from(clonedDoc.querySelectorAll('.page')).forEach((p,idx) => {
-            p.style.display = idx === i ? 'flex' : 'none';
-          });
-        }
-      }).then(canvas => {
-        const imgData = canvas.toDataURL('image/jpeg', 0.95);
-        if (i > 0) doc.addPage([794,1123], 'portrait');
-        doc.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
-        captureNext(i + 1);
-      }).catch(err => {
-        console.error('capture error page', i, err);
-        captureNext(i + 1);
-      });
-    };
-    captureNext(0);
+  const captureNext = (i) => {
+    if (i >= pages.length) {
+      wrap.remove();
+      ov.remove();
+      doc.save('تقرير-تقنية-المعلومات-يونيو-2026.pdf');
+      return;
+    }
+    html2canvas(pages[i], {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+      width: 794,
+      height: 1123,
+      windowWidth: 794,
+    }).then(canvas => {
+      const imgData = canvas.toDataURL('image/jpeg', 0.92);
+      if (i > 0) doc.addPage([794,1123], 'portrait');
+      doc.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
+      captureNext(i + 1);
+    }).catch(err => {
+      console.error('PDF export failed on page', i, err);
+      wrap.remove();
+      ov.remove();
+      alert('حصل خطأ أثناء إنشاء التقرير، حاول مرة أخرى.');
+    });
   };
 
-  /* wait for fonts to load inside the iframe */
-  iframe.onload = () => setTimeout(doCapture, 1200);
-  if (iDoc.readyState === 'complete') setTimeout(doCapture, 1200);
+  setTimeout(() => captureNext(0), 700);
+
+  }); // end getLogoBase64
 }
 
 /* ══════════════════════════════════════════════════
